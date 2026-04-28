@@ -1,0 +1,10 @@
+fastapi[all]
+sqlalchemy[asyncio]
+asyncpg
+httpx
+beautifulsoup4
+pydantic
+uvicorn
+python-dotenv
+psycopg2-binary
+aiosqlite

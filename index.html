@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nepal News Map | Real-Time News Intelligence</title>
+    <meta name="description" content="Interactive choropleth map and real-time news intelligence platform for Nepal's 77 districts.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="dark-theme">
+
+    <!-- ── Breaking News Ticker ─────────────────────────────────────────── -->
+    <header class="ticker-wrapper" id="ticker-header">
+        <div class="ticker-label">BREAKING</div>
+        <div class="ticker-content" id="breaking-ticker">
+            <div class="ticker-track">
+                <span class="ticker-item">Loading latest headlines from across Nepal…</span>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar" id="search-bar">
+            <input type="text"
+                   id="search-input"
+                   class="search-input"
+                   placeholder="Search articles…"
+                   autocomplete="off"
+                   aria-label="Search news articles">
+            <button id="search-btn" class="search-btn" aria-label="Search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- ── Main 3-column Layout ─────────────────────────────────────────── -->
+    <main class="app-container">
+
+        <!-- Left: Top Stories -->
+        <aside class="side-panel left-panel" id="left-panel">
+            <div class="panel-header">
+                <h2>Top Stories</h2>
+                <div class="panel-filters">
+                    <select id="category-filter" class="custom-select" aria-label="Filter by category">
+                        <option value="all">All Categories</option>
+                        <option value="politics">Politics</option>
+                        <option value="economy">Economy</option>
+                        <option value="business">Business</option>
+                        <option value="sports">Sports</option>
+                        <option value="disaster">Disaster</option>
+                        <option value="world">World</option>
+                        <option value="top">Top</option>
+                    </select>
+                </div>
+            </div>
+            <div class="scroll-container" id="top-stories-list">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+        </aside>
+
+        <!-- Center: Map -->
+        <section class="map-section">
+            <div id="map-container" class="glass-panel">
+                <div id="nepal-map"></div>
+                
+                <!-- Map Controls Overlay -->
+                <div class="map-controls glass-panel">
+                    <button id="btn-reset-map" class="map-ctrl-btn" title="Reset View">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    </button>
+                </div>
+
+                <!-- Floating Glass Tooltip (hidden by default) -->
+                <div id="custom-map-tooltip" class="glass-tooltip" style="opacity: 0; pointer-events: none;">
+                    <div class="tt-header">
+                        <span id="tt-name-en">District</span>
+                        <span id="tt-name-ne" class="tt-ne">जिल्ला</span>
+                    </div>
+                    <div class="tt-body">
+                        <div class="tt-stat">
+                            <span class="tt-count" id="tt-count">0</span>
+                            <span class="tt-label">Articles</span>
+                        </div>
+                        <div class="tt-pulse-ring" id="tt-pulse" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="map-overlay-controls">
+                    <div class="map-stats-badge glass-panel">
+                        <span id="total-articles-count">0</span> Articles Indexed
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-legend glass-panel">
+                <span class="legend-label">News Density:</span>
+                <div class="gradient-bar"></div>
+                <div class="legend-labels">
+                    <span>None</span>
+                    <span>Low</span>
+                    <span>Med</span>
+                    <span>High</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Trending Now -->
+        <aside class="side-panel right-panel" id="right-panel">
+            <div class="panel-header">
+                <h2>Trending Now</h2>
+                <div class="category-tabs" id="trending-tabs" role="tablist">
+                    <button class="tab-btn active" data-hours="24"  role="tab">24h</button>
+                    <button class="tab-btn"        data-hours="168" role="tab">7d</button>
+                    <button class="tab-btn"        data-hours="720" role="tab">30d</button>
+                </div>
+            </div>
+            <div class="scroll-container" id="trending-list">
+                <div class="skeleton-trending"></div>
+                <div class="skeleton-trending"></div>
+                <div class="skeleton-trending"></div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- ── District Drawer (slides up from bottom) ──────────────────────── -->
+    <div id="article-drawer" class="drawer-hidden" role="dialog" aria-labelledby="drawer-district-name">
+        <div class="drawer-handle"></div>
+        <div class="drawer-header">
+            <div class="drawer-title">
+                <h3 id="drawer-district-name">District</h3>
+                <span id="drawer-article-count" class="drawer-count-badge">0 articles</span>
+            </div>
+            <button id="close-drawer" class="close-btn" aria-label="Close drawer">&times;</button>
+        </div>
+        <div class="drawer-content" id="drawer-news-list">
+            <!-- District news injected here -->
+        </div>
+    </div>
+
+    <!-- ── Footer ───────────────────────────────────────────────────────── -->
+    <footer class="app-footer">
+        <div class="status-indicator">
+            <span class="status-dot online" id="status-dot"></span>
+            Last updated: <span id="last-update-time">just now</span>
+            &nbsp;·&nbsp;
+            <span id="refresh-countdown" class="refresh-countdown">Refresh in 5:00</span>
+        </div>
+        <div class="footer-links">
+            <a href="#" id="about-link">About</a>
+            <a href="#" id="sources-link">Data Sources</a>
+            <a href="/admin" id="admin-link">Admin Portal</a>
+        </div>
+    </footer>
+
+    <!-- ── Leaflet JS ────────────────────────────────────────────────────── -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- ── App Scripts (order matters: api → map → news → trending) ────── -->
+    <script src="js/api.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/news.js"></script>
+    <script src="js/trending.js"></script>
+</body>
+
+</html>
